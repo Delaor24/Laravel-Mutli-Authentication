@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Auth;
+namespace App\Http\Controllers\Admin\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Http\Request;
 use Auth;
 class LoginController extends Controller
 {
@@ -35,10 +36,32 @@ class LoginController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('guest')->except('logout');
+        $this->middleware('guest:admin')->except('logout');
     }
-     public function logout(){
-       Auth::guard('web')->logout();
+
+    public function ShowLoginForm(){
+        return view('admin.auth.login');
+    }
+    public function login(Request $request){
+       $this->validate($request,[
+          'email'=>'required|string',
+          'password'=>'required|string'
+       ]);
+
+       $cradentials = [
+           'email'=>$request->email,
+           'password'=>$request->password
+       ];
+
+       if(Auth::guard('admin')->attempt($cradentials,$request->remember)){
+          return redirect()->intended(route('admin.home'));
+       }else{
+        return redirect()->back()->withInputs($request->only('email','remember'));
+       }
+    }
+
+    public function logout(){
+       Auth::guard('admin')->logout();
        return redirect('/');
     }
 }
